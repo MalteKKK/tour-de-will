@@ -14,6 +14,11 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Tour de Will",
   },
+  openGraph: {
+    title: "Tour de Will – 30. Geburtstag",
+    description: "Wills 30. Geburtstags-Radabenteuer",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
 };
 
 export const viewport: Viewport = {
