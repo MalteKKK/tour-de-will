@@ -21,6 +21,7 @@ import {
   setLastSeenUnlocks,
 } from "@/lib/storage";
 import { CONFIG, ACHIEVEMENTS } from "@/lib/config";
+import { subscribeToPush, canUsePush, isPushGranted } from "@/lib/push";
 import ParticleBackground from "@/components/ParticleBackground";
 import CountdownTimer from "@/components/CountdownTimer";
 import WeatherWidget from "@/components/WeatherWidget";
@@ -45,6 +46,7 @@ export default function CountdownPage() {
   const [newlyUnlocked, setNewlyUnlocked] = useState<string[]>([]);
   const [playerAchievements, setPlayerAchievements] = useState<Record<string, { unlockedAt: string }>>({});
   const [sharedScores, setSharedScores] = useState<Record<string, Record<string, number>>>({});
+  const [pushEnabled, setPushEnabled] = useState(false);
 
   useEffect(() => {
     const p = getCurrentPlayer();
@@ -67,6 +69,11 @@ export default function CountdownPage() {
       .then((res) => res.json())
       .then((data) => setSharedScores(data))
       .catch(() => {});
+
+    // Auto-subscribe to push if already granted
+    if (isPushGranted()) {
+      subscribeToPush(p).then((ok) => setPushEnabled(ok));
+    }
 
     // Check for newly unlocked games (notification system)
     const currentUnlocks = getGameUnlocks();
@@ -113,7 +120,7 @@ export default function CountdownPage() {
   }
 
   function resetAllData() {
-    const keys = ["tdw_highscores", "tdw_terminVotes", "tdw_selectedDate", "tdw_gameCompleted", "tdw_gameUnlocks", "tdw_achievements"];
+    const keys = ["tdw_highscores", "tdw_highscores_bike-runner", "tdw_highscores_reaktion", "tdw_terminVotes", "tdw_selectedDate", "tdw_gameCompleted", "tdw_gameUnlocks", "tdw_achievements"];
     keys.forEach((k) => localStorage.removeItem(k));
     setDate(null);
     setVotes({});
@@ -126,6 +133,8 @@ export default function CountdownPage() {
 
   function resetHighscores() {
     localStorage.removeItem("tdw_highscores");
+    localStorage.removeItem("tdw_highscores_bike-runner");
+    localStorage.removeItem("tdw_highscores_reaktion");
     localStorage.removeItem("tdw_gameCompleted");
     localStorage.removeItem("tdw_achievements");
     setHighscoresState({});
@@ -146,6 +155,22 @@ export default function CountdownPage() {
     const current = isGameUnlocked(gameId);
     setGameUnlock(gameId, !current);
     setUnlocks(getGameUnlocks());
+
+    // Send push notification when unlocking a game
+    if (!current) {
+      const game = CONFIG.games.find((g) => g.id === gameId);
+      if (game) {
+        fetch("/api/push/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: "🎉 Neue Challenge!",
+            body: `${game.title} ist jetzt freigeschaltet!`,
+            targetPlayers: ["Will", "Linda", "Nicola"],
+          }),
+        }).catch(() => {});
+      }
+    }
   }
 
   function addTermin() {
@@ -353,9 +378,29 @@ export default function CountdownPage() {
           <p className="text-sm text-white/70 mb-2">
             Löse alle Challenges, um das Geheimnis der Tour zu lüften!
           </p>
-          <p className="text-xs text-[#8ab4d6]">
-            Du erhältst eine Nachricht, sobald eine neue Challenge freigeschaltet wird.
-          </p>
+          {canUsePush() && !pushEnabled && (
+            <button
+              onClick={async () => {
+                if (player) {
+                  const ok = await subscribeToPush(player);
+                  setPushEnabled(ok);
+                }
+              }}
+              className="mt-3 w-full px-4 py-2 rounded-xl text-sm font-bold transition-colors bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/30"
+            >
+              🔔 Benachrichtigungen aktivieren
+            </button>
+          )}
+          {pushEnabled && (
+            <p className="text-xs text-green-400 mt-2">
+              🔔 Benachrichtigungen sind aktiv!
+            </p>
+          )}
+          {!canUsePush() && (
+            <p className="text-xs text-[#8ab4d6] mt-2">
+              Du erhältst eine Nachricht, sobald eine neue Challenge freigeschaltet wird.
+            </p>
+          )}
         </div>
 
         {/* Route with Games */}

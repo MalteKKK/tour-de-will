@@ -28,7 +28,7 @@ We love You ❤️`,
   ],
 
   // ✏️ Punktzahl für den Hinweis im Bike Runner
-  bikeRunnerHintScore: 500,
+  bikeRunnerHintScore: 1000,
 
   // ✏️ Hinweis-Text, der beim Bike Runner enthüllt wird
   bikeRunnerHintText: "Bring dein Fahrrad und gute Laune mit! 🚴",

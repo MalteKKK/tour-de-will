@@ -114,7 +114,7 @@ export default function BikeRunnerPage() {
       return;
     }
     setPlayer(p);
-    const hs = getHighscores();
+    const hs = getHighscores("bike-runner");
     setHighscores(hs);
     prevHighscoreRef.current = hs[p] || 0;
     setMutedState(isMuted());
@@ -302,8 +302,8 @@ export default function BikeRunnerPage() {
         setIsNewHighscore(isNew);
 
         if (player) {
-          setHighscore(player, finalScore);
-          setHighscores(getHighscores());
+          setHighscore(player, finalScore, "bike-runner");
+          setHighscores(getHighscores("bike-runner"));
           // Sync to shared backend
           fetch("/api/scores", {
             method: "POST",
@@ -361,7 +361,7 @@ export default function BikeRunnerPage() {
     setMilestone(null);
     setGameState("playing");
     if (player) {
-      prevHighscoreRef.current = getHighscores()[player] || 0;
+      prevHighscoreRef.current = getHighscores("bike-runner")[player] || 0;
     }
     animFrameRef.current = requestAnimationFrame(gameLoop);
   }
@@ -489,14 +489,29 @@ export default function BikeRunnerPage() {
               <h2 className="font-bangers text-3xl text-[#FFD700] tracking-wider mb-4 text-shadow-orange">
                 Bike Runner
               </h2>
-              <p className="text-white/80 text-center mb-1 text-sm px-6">
-                Weiche Hindernissen aus!
+              <p className="text-white/80 text-center mb-3 text-sm px-6">
+                Weiche Hindernissen aus und sammle Punkte!
               </p>
-              <p className="text-[#8ab4d6] text-center mb-1 text-xs px-6">
-                ⭐ Sammle Sterne für Bonuspunkte
-              </p>
+              <div className="w-full px-4 mb-4 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <span className="text-base">🚧🕳️🚕</span>
+                  <span>Hindernisse – ausweichen!</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <span className="text-base">⭐</span>
+                  <span>Sterne sammeln = +15 Bonuspunkte</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <span className="text-base">🔥</span>
+                  <span>Knapp ausweichen = Combo-Bonus!</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-white/70">
+                  <span className="text-base">💡</span>
+                  <span>Erreiche 1000 Punkte für einen Hinweis</span>
+                </div>
+              </div>
               <p className="text-[#8ab4d6] text-center mb-4 text-xs px-6">
-                🔥 Knappe Ausweichmanöver = Combo-Bonus!
+                ← Tippe links/rechts oder swipe →
               </p>
               <button
                 onClick={(e) => { e.stopPropagation(); startGame(); }}

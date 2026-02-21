@@ -42,7 +42,7 @@ export default function ReaktionPage() {
       return;
     }
     setPlayer(p);
-    setHighscores(getHighscores());
+    setHighscores(getHighscores("reaktion"));
     setMutedState(isMuted());
   }, [router]);
 
@@ -110,8 +110,8 @@ export default function ReaktionPage() {
       const avg = Math.round(newTimes.reduce((a, b) => a + b, 0) / newTimes.length);
       const score = Math.max(0, 1000 - avg);
       if (player) {
-        setHighscore(player, score);
-        setHighscores(getHighscores());
+        setHighscore(player, score, "reaktion");
+        setHighscores(getHighscores("reaktion"));
         fetch("/api/scores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -37,20 +37,25 @@ export function getSelectedDate(): string | null {
   return localStorage.getItem(KEYS.selectedDate);
 }
 
-export function getHighscores(): Record<string, number> {
+export function getHighscores(game?: string): Record<string, number> {
   if (typeof window === "undefined") return {};
   try {
+    if (game) {
+      return JSON.parse(localStorage.getItem(`${KEYS.highscores}_${game}`) || "{}");
+    }
+    // Fallback: legacy global highscores
     return JSON.parse(localStorage.getItem(KEYS.highscores) || "{}");
   } catch {
     return {};
   }
 }
 
-export function setHighscore(player: string, score: number) {
-  const scores = getHighscores();
+export function setHighscore(player: string, score: number, game?: string) {
+  const key = game ? `${KEYS.highscores}_${game}` : KEYS.highscores;
+  const scores = getHighscores(game);
   if (!scores[player] || score > scores[player]) {
     scores[player] = score;
-    localStorage.setItem(KEYS.highscores, JSON.stringify(scores));
+    localStorage.setItem(key, JSON.stringify(scores));
   }
 }
 
