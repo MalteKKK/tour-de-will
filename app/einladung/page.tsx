@@ -60,7 +60,7 @@ export default function EinladungPage() {
               🚴 TOUR DE WILL 🚴
             </h1>
             <p className="text-[#8ab4d6] mt-4 font-semibold tracking-widest text-lg">
-              Dein 30. Geburtstags-Radabenteuer
+              Dein 30. Geburtstagsabenteuer
             </p>
 
             <button
