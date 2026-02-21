@@ -131,6 +131,42 @@ function playAchievement() {
   });
 }
 
+function playBirthdayJingle() {
+  // 8-bit "Happy Birthday" melody
+  const melody: [number, number][] = [
+    // freq, startMs
+    [262, 0],    // C4 - Hap-
+    [262, 180],  // C4 - py
+    [294, 400],  // D4 - birth-
+    [262, 650],  // C4 - day
+    [349, 900],  // F4 - to
+    [330, 1200], // E4 - you (hold)
+    [262, 1600], // C4 - Hap-
+    [262, 1780], // C4 - py
+    [294, 2000], // D4 - birth-
+    [262, 2250], // C4 - day
+    [392, 2500], // G4 - to
+    [349, 2800], // F4 - you (hold)
+    [262, 3200], // C4 - Hap-
+    [262, 3380], // C4 - py
+    [523, 3600], // C5 - birth-
+    [440, 3850], // A4 - day
+    [349, 4100], // F4 - dear
+    [330, 4350], // E4 - Will
+    [294, 4600], // D4 - !!
+    [466, 5000], // Bb4 -
+    [466, 5180], // Bb4 -
+    [440, 5400], // A4 -
+    [349, 5650], // F4 -
+    [392, 5900], // G4 -
+    [349, 6200], // F4 - (final hold)
+  ];
+
+  melody.forEach(([freq, delay]) => {
+    setTimeout(() => playTone(freq, 0.2, "square", 0.18), delay);
+  });
+}
+
 // --- Public API ---
 
 export type SoundName =
@@ -142,7 +178,8 @@ export type SoundName =
   | "targetSpawn"
   | "tapHit"
   | "gameOver"
-  | "achievement";
+  | "achievement"
+  | "birthdayJingle";
 
 const soundMap: Record<SoundName, () => void> = {
   crash: playCrash,
@@ -154,6 +191,7 @@ const soundMap: Record<SoundName, () => void> = {
   tapHit: playTapHit,
   gameOver: playGameOver,
   achievement: playAchievement,
+  birthdayJingle: playBirthdayJingle,
 };
 
 export function playSound(name: SoundName) {

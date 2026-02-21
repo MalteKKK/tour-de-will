@@ -13,8 +13,14 @@
   --font-quicksand: 'Quicksand', sans-serif;
 }
 
+:root {
+  --theme-bg1: #0f1923;
+  --theme-bg2: #1a2a3a;
+  --theme-accent: rgba(255, 215, 0, 0.05);
+}
+
 body {
-  background: linear-gradient(135deg, #0f1923 0%, #1a2a3a 50%, #0f1923 100%);
+  background: linear-gradient(135deg, var(--theme-bg1) 0%, var(--theme-bg2) 50%, var(--theme-bg1) 100%);
   color: #ffffff;
   font-family: 'Quicksand', sans-serif;
   min-height: 100vh;
@@ -177,4 +183,26 @@ body {
 
 .animate-glow-pulse {
   animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Shake Easter Egg: wobble animation */
+@keyframes wobble {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(15deg); }
+  30% { transform: rotate(-12deg); }
+  45% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-wobble {
+  animation: wobble 0.8s ease-in-out;
+}
+
+/* Confetti burst (enhanced for achievements) */
+@keyframes confettiBurst {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  50% { opacity: 1; }
+  100% { transform: translateY(80vh) rotate(720deg) scale(0.3); opacity: 0; }
 }

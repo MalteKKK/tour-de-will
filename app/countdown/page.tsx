@@ -22,9 +22,13 @@ import {
 } from "@/lib/storage";
 import { CONFIG, ACHIEVEMENTS } from "@/lib/config";
 import { subscribeToPush, canUsePush, isPushGranted } from "@/lib/push";
+import { playSound } from "@/lib/sounds";
 import ParticleBackground from "@/components/ParticleBackground";
 import CountdownTimer from "@/components/CountdownTimer";
 import WeatherWidget from "@/components/WeatherWidget";
+import Confetti from "@/components/Confetti";
+import ShakeEasterEgg from "@/components/ShakeEasterEgg";
+import { useTimeGreeting } from "@/components/TimeThemeProvider";
 
 // Route dot offsets to create winding path feel
 const ROUTE_OFFSETS = [0, 18, -12, 18, -12, 0]; // px shift for each stop
@@ -47,6 +51,8 @@ export default function CountdownPage() {
   const [playerAchievements, setPlayerAchievements] = useState<Record<string, { unlockedAt: string }>>({});
   const [sharedScores, setSharedScores] = useState<Record<string, Record<string, number>>>({});
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [showWelcomeConfetti, setShowWelcomeConfetti] = useState(false);
+  const timeGreeting = useTimeGreeting();
 
   useEffect(() => {
     const p = getCurrentPlayer();
@@ -73,6 +79,30 @@ export default function CountdownPage() {
     // Auto-subscribe to push if already granted
     if (isPushGranted()) {
       subscribeToPush(p).then((ok) => setPushEnabled(ok));
+    }
+
+    // Welcome confetti on every visit
+    setShowWelcomeConfetti(true);
+    setTimeout(() => setShowWelcomeConfetti(false), 5000);
+
+    // Birthday jingle for Will on first visit
+    if (p === "Will" && !localStorage.getItem("tdw_jinglePlayed")) {
+      // Small delay so audio context can be created after user interaction
+      const playJingle = () => {
+        playSound("birthdayJingle");
+        localStorage.setItem("tdw_jinglePlayed", "true");
+        document.removeEventListener("click", playJingle);
+      };
+      // Try immediately (might work if returning from another page)
+      setTimeout(() => {
+        try {
+          playSound("birthdayJingle");
+          localStorage.setItem("tdw_jinglePlayed", "true");
+        } catch {
+          // Need user interaction first – play on first tap
+          document.addEventListener("click", playJingle, { once: true });
+        }
+      }, 500);
     }
 
     // Check for newly unlocked games (notification system)
@@ -200,6 +230,8 @@ export default function CountdownPage() {
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-10 relative">
       <ParticleBackground />
+      <Confetti active={showWelcomeConfetti} />
+      <ShakeEasterEgg />
 
       <div className="z-10 w-full max-w-md">
         <h1 className="font-bangers text-3xl md:text-4xl text-[#FFD700] text-center tracking-[4px] text-shadow-orange mb-2 animate-title-bounce">
@@ -209,7 +241,7 @@ export default function CountdownPage() {
           className="text-[#8ab4d6] text-center font-semibold tracking-wider mb-8 text-sm cursor-default select-none"
           onClick={handleGreetingTap}
         >
-          Hallo {player}!
+          {timeGreeting.emoji} {timeGreeting.label}, {player}!
         </p>
 
         {/* Notification: New game unlocked */}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import TimeThemeProvider from "@/components/TimeThemeProvider";
 
 export const metadata: Metadata = {
   title: "Tour de Will – 30. Geburtstag",
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="font-quicksand antialiased">
+        <TimeThemeProvider />
         {children}
       </body>
     </html>
