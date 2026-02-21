@@ -83,6 +83,7 @@ export default function BikeRunnerPage() {
   const nextObstacleRef = useRef(0);
   const nextCollectibleRef = useRef(0);
   const hintShownRef = useRef(false);
+  const friendsShownRef = useRef(false);
   const gameActiveRef = useRef(false);
   const dodgeStreakRef = useRef(0);
   const lastMilestoneRef = useRef(0);
@@ -91,7 +92,7 @@ export default function BikeRunnerPage() {
   const maxComboRef = useRef(0);
 
   const [player, setPlayer] = useState<string | null>(null);
-  const [gameState, setGameState] = useState<"ready" | "playing" | "hint" | "gameover">("ready");
+  const [gameState, setGameState] = useState<"ready" | "playing" | "friends" | "hint" | "gameover">("ready");
   const [score, setScore] = useState(0);
   const [lane, setLane] = useState(1);
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
@@ -172,6 +173,23 @@ export default function BikeRunnerPage() {
         scoreRef.current += 10;
         break;
       }
+    }
+
+    // Friends moment at 1000
+    if (!friendsShownRef.current && scoreRef.current >= 1000) {
+      friendsShownRef.current = true;
+      gameActiveRef.current = false;
+      playSound("milestone");
+      vibrate([100, 50, 100]);
+      setGameState("friends");
+      setShowFriends(true);
+      setTimeout(() => {
+        setGameState("playing");
+        gameActiveRef.current = true;
+        lastTimeRef.current = 0;
+        animFrameRef.current = requestAnimationFrame(gameLoop);
+      }, 4000);
+      return;
     }
 
     // Hint trigger
@@ -263,7 +281,7 @@ export default function BikeRunnerPage() {
           const bonus = Math.min(5 + dodgeStreakRef.current * 2, 25);
           scoreRef.current += bonus;
           const x = playerLane * laneWidth + laneWidth / 2;
-          if (dodgeStreakRef.current >= 5) {
+          if (dodgeStreakRef.current >= 8) {
             tryUnlockAchievement("kombo-koenig");
           }
           if (dodgeStreakRef.current > maxComboRef.current) {
@@ -313,9 +331,9 @@ export default function BikeRunnerPage() {
         }
 
         // Check achievements
-        if (finalScore >= 500) tryUnlockAchievement("unaufhaltsam");
-        if (finalScore >= 1000) tryUnlockAchievement("marathon");
-        if (starsCollectedRef.current >= 10) tryUnlockAchievement("sternsammler");
+        if (finalScore >= 1000) tryUnlockAchievement("unaufhaltsam");
+        if (finalScore >= 2000) tryUnlockAchievement("marathon");
+        if (starsCollectedRef.current >= 20) tryUnlockAchievement("sternsammler");
 
         setGameState("gameover");
         return;
@@ -344,6 +362,7 @@ export default function BikeRunnerPage() {
     nextObstacleRef.current = 80;
     nextCollectibleRef.current = 50;
     hintShownRef.current = false;
+    friendsShownRef.current = false;
     lastTimeRef.current = 0;
     lastMilestoneRef.current = 0;
     dodgeStreakRef.current = 0;
@@ -507,7 +526,7 @@ export default function BikeRunnerPage() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-white/70">
                   <span className="text-base">💡</span>
-                  <span>Erreiche 1000 Punkte für einen Hinweis</span>
+                  <span>Erreiche 2000 Punkte für einen Hinweis</span>
                 </div>
               </div>
               <p className="text-[#8ab4d6] text-center mb-4 text-xs px-6">
@@ -520,6 +539,25 @@ export default function BikeRunnerPage() {
               >
                 Los geht&apos;s!
               </button>
+            </div>
+          )}
+
+          {/* Friends overlay at 1000 */}
+          {gameState === "friends" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-20 px-4">
+              <div className="flex gap-3 mb-4 animate-slide-in-left">
+                {Object.entries(AVATARS).map(([name, Avatar]) => (
+                  <div key={name} className="w-14 h-14">
+                    <Avatar className="w-full h-full" />
+                  </div>
+                ))}
+              </div>
+              <p className="font-bangers text-2xl text-[#FFD700] tracking-wider text-center animate-fade-in-up">
+                Du fährst nicht allein...
+              </p>
+              <p className="text-white/60 text-sm mt-2 animate-fade-in-up" style={{ animationDelay: "1s", animationFillMode: "backwards" }}>
+                Weiter so! 💪
+              </p>
             </div>
           )}
 
@@ -593,7 +631,7 @@ export default function BikeRunnerPage() {
           ))}
 
           {/* Player Avatar */}
-          {(gameState === "playing" || gameState === "hint") && (
+          {(gameState === "playing" || gameState === "friends" || gameState === "hint") && (
             <div
               className="absolute transition-all duration-150 ease-out"
               style={{

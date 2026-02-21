@@ -28,7 +28,7 @@ We love You ❤️`,
   ],
 
   // ✏️ Punktzahl für den Hinweis im Bike Runner
-  bikeRunnerHintScore: 1000,
+  bikeRunnerHintScore: 2000,
 
   // ✏️ Hinweis-Text, der beim Bike Runner enthüllt wird
   bikeRunnerHintText: "Bring dein Fahrrad und gute Laune mit! 🚴",
@@ -51,13 +51,13 @@ export type PlayerName = (typeof CONFIG.players)[number];
 // Achievements
 // ============================================================
 export const ACHIEVEMENTS = [
-  { id: "sternsammler", title: "Sternsammler", description: "10+ Sterne in einem Lauf", emoji: "⭐", game: "bike-runner" },
-  { id: "unaufhaltsam", title: "Unaufhaltsam", description: "500+ Punkte im Bike Runner", emoji: "🛡️", game: "bike-runner" },
-  { id: "kombo-koenig", title: "Kombo-König", description: "5x Combo-Streak", emoji: "🔥", game: "bike-runner" },
-  { id: "marathon", title: "Marathon", description: "1000+ Punkte im Bike Runner", emoji: "🏅", game: "bike-runner" },
-  { id: "geschwindigkeitsrausch", title: "Geschwindigkeitsrausch", description: "Reaktion-Durchschnitt unter 200ms", emoji: "⚡", game: "reaktion" },
-  { id: "perfektionist", title: "Perfektionist", description: "800+ Punkte im Reaktionstest", emoji: "🏆", game: "reaktion" },
-  { id: "blitzstart", title: "Blitzstart", description: "Eine Reaktion unter 150ms", emoji: "💨", game: "reaktion" },
+  { id: "sternsammler", title: "Sternsammler", description: "20+ Sterne in einem Lauf", emoji: "⭐", game: "bike-runner" },
+  { id: "unaufhaltsam", title: "Unaufhaltsam", description: "1000+ Punkte im Bike Runner", emoji: "🛡️", game: "bike-runner" },
+  { id: "kombo-koenig", title: "Kombo-König", description: "8x Combo-Streak", emoji: "🔥", game: "bike-runner" },
+  { id: "marathon", title: "Marathon", description: "2000+ Punkte im Bike Runner", emoji: "🏅", game: "bike-runner" },
+  { id: "geschwindigkeitsrausch", title: "Geschwindigkeitsrausch", description: "Reaktion-Durchschnitt unter 150ms", emoji: "⚡", game: "reaktion" },
+  { id: "perfektionist", title: "Perfektionist", description: "900+ Punkte im Reaktionstest", emoji: "🏆", game: "reaktion" },
+  { id: "blitzstart", title: "Blitzstart", description: "Eine Reaktion unter 100ms", emoji: "💨", game: "reaktion" },
 ] as const;
 
 export type AchievementId = (typeof ACHIEVEMENTS)[number]["id"];

@@ -122,9 +122,9 @@ export default function ReaktionPage() {
       playSound("gameOver");
 
       // Check achievements
-      if (avg < 200) tryUnlockAchievement("geschwindigkeitsrausch");
-      if (score >= 800) tryUnlockAchievement("perfektionist");
-      if (newTimes.some(t => t < 150)) tryUnlockAchievement("blitzstart");
+      if (avg < 150) tryUnlockAchievement("geschwindigkeitsrausch");
+      if (score >= 900) tryUnlockAchievement("perfektionist");
+      if (newTimes.some(t => t < 100)) tryUnlockAchievement("blitzstart");
 
       setGameState("gameover");
     } else {
