@@ -35,10 +35,10 @@ We love You ❤️`,
 
   // ✏️ Game-Definitionen (Reihenfolge = Route)
   games: [
-    { id: "bike-runner", title: "Bike Runner", description: "Weiche Hindernissen aus!", href: "/spiel/bike-runner", week: 1 },
-    { id: "reaktion", title: "Reaktionstest", description: "Wie schnell sind deine Reflexe?", href: "/spiel/reaktion", week: 2 },
-    { id: "game3", title: "???", description: "Bald verfügbar", href: "", week: 3 },
-    { id: "game4", title: "???", description: "Bald verfügbar", href: "", week: 4 },
+    { id: "bike-runner", title: "Bike Runner", description: "Weiche Hindernissen aus!", href: "/spiel/bike-runner" },
+    { id: "reaktion", title: "Reaktionstest", description: "Wie schnell sind deine Reflexe?", href: "/spiel/reaktion" },
+    { id: "game3", title: "???", description: "Bald verfügbar", href: "" },
+    { id: "game4", title: "???", description: "Bald verfügbar", href: "" },
   ] as const,
 
   // ✏️ Teilnehmer
@@ -46,3 +46,18 @@ We love You ❤️`,
 };
 
 export type PlayerName = (typeof CONFIG.players)[number];
+
+// ============================================================
+// Achievements
+// ============================================================
+export const ACHIEVEMENTS = [
+  { id: "sternsammler", title: "Sternsammler", description: "10+ Sterne in einem Lauf", emoji: "⭐", game: "bike-runner" },
+  { id: "unaufhaltsam", title: "Unaufhaltsam", description: "500+ Punkte im Bike Runner", emoji: "🛡️", game: "bike-runner" },
+  { id: "kombo-koenig", title: "Kombo-König", description: "5x Combo-Streak", emoji: "🔥", game: "bike-runner" },
+  { id: "marathon", title: "Marathon", description: "1000+ Punkte im Bike Runner", emoji: "🏅", game: "bike-runner" },
+  { id: "geschwindigkeitsrausch", title: "Geschwindigkeitsrausch", description: "Reaktion-Durchschnitt unter 200ms", emoji: "⚡", game: "reaktion" },
+  { id: "perfektionist", title: "Perfektionist", description: "800+ Punkte im Reaktionstest", emoji: "🏆", game: "reaktion" },
+  { id: "blitzstart", title: "Blitzstart", description: "Eine Reaktion unter 150ms", emoji: "💨", game: "reaktion" },
+] as const;
+
+export type AchievementId = (typeof ACHIEVEMENTS)[number]["id"];

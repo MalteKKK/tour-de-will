@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentPlayer, getTerminVotes, setTerminVotes } from "@/lib/storage";
+import { getCurrentPlayer, getTerminVotes, setTerminVotes, getCustomTermine, Termin } from "@/lib/storage";
 import { CONFIG } from "@/lib/config";
 import ParticleBackground from "@/components/ParticleBackground";
 import Confetti from "@/components/Confetti";
@@ -13,6 +13,7 @@ export default function TerminPage() {
   const [selected, setSelected] = useState<number[]>([]);
   const [saved, setSaved] = useState(false);
   const [allVotes, setAllVotes] = useState<Record<string, number[]>>({});
+  const [termine, setTermineList] = useState<Termin[]>(CONFIG.termine as unknown as Termin[]);
 
   useEffect(() => {
     const p = getCurrentPlayer();
@@ -26,6 +27,8 @@ export default function TerminPage() {
     if (votes[p]) {
       setSelected(votes[p]);
     }
+    const custom = getCustomTermine();
+    if (custom) setTermineList(custom);
   }, [router]);
 
   function toggleDate(id: number) {
@@ -68,7 +71,7 @@ export default function TerminPage() {
         </p>
 
         <div className="flex flex-col gap-4 mb-8">
-          {CONFIG.termine.map((termin) => {
+          {termine.map((termin) => {
             const isChecked = selected.includes(termin.id);
             const voters = voteCount(termin.id);
 

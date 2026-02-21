@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentPlayer, getHighscores, setHighscore, setGameCompleted } from "@/lib/storage";
+import { getCurrentPlayer, getHighscores, setHighscore, setGameCompleted, unlockAchievement } from "@/lib/storage";
+import { ACHIEVEMENTS } from "@/lib/config";
+import { playSound, vibrate, isMuted, setMuted } from "@/lib/sounds";
+import AchievementPopup from "@/components/AchievementPopup";
 import ParticleBackground from "@/components/ParticleBackground";
 
 const TARGETS = ["🦘", "🚴", "🎂", "🌟", "🎯", "⚡", "🔥", "🎪", "🐊", "🍻"];
@@ -29,6 +32,8 @@ export default function ReaktionPage() {
   const [highscores, setHighscores] = useState<Record<string, number>>({});
   const spawnTimeRef = useRef(0);
   const areaRef = useRef<HTMLDivElement>(null);
+  const [muted, setMutedState] = useState(false);
+  const [achievementPopup, setAchievementPopup] = useState<{ title: string; emoji: string; description: string } | null>(null);
 
   useEffect(() => {
     const p = getCurrentPlayer();
@@ -38,7 +43,26 @@ export default function ReaktionPage() {
     }
     setPlayer(p);
     setHighscores(getHighscores());
+    setMutedState(isMuted());
   }, [router]);
+
+  function tryUnlockAchievement(id: string) {
+    const isNew = unlockAchievement(id);
+    if (isNew) {
+      const def = ACHIEVEMENTS.find(a => a.id === id);
+      if (def) {
+        playSound("achievement");
+        setAchievementPopup({ title: def.title, emoji: def.emoji, description: def.description });
+      }
+      if (player) {
+        fetch("/api/achievements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player, achievementId: id }),
+        }).catch(() => {});
+      }
+    }
+  }
 
   const spawnTarget = useCallback(() => {
     const emoji = TARGETS[Math.floor(Math.random() * TARGETS.length)];
@@ -47,6 +71,7 @@ export default function ReaktionPage() {
     const y = 10 + Math.random() * 60; // % from top
     setTargets([{ id: Date.now(), emoji, x, y, size, spawned: Date.now() }]);
     spawnTimeRef.current = Date.now();
+    playSound("targetSpawn");
   }, []);
 
   function startGame() {
@@ -70,6 +95,9 @@ export default function ReaktionPage() {
   function handleTap() {
     if (gameState !== "playing" || targets.length === 0) return;
 
+    playSound("tapHit");
+    vibrate(20);
+
     const reactionTime = Date.now() - spawnTimeRef.current;
     const newTimes = [...times, reactionTime];
     setTimes(newTimes);
@@ -79,15 +107,25 @@ export default function ReaktionPage() {
     setRound(nextRound);
 
     if (nextRound >= ROUNDS) {
-      // Game over – score is average reaction time (lower is better)
       const avg = Math.round(newTimes.reduce((a, b) => a + b, 0) / newTimes.length);
-      // Store as inverted score so higher = better in leaderboard
       const score = Math.max(0, 1000 - avg);
       if (player) {
         setHighscore(player, score);
         setHighscores(getHighscores());
+        fetch("/api/scores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player, game: "reaktion", score }),
+        }).catch(() => {});
       }
       setGameCompleted("reaktion");
+      playSound("gameOver");
+
+      // Check achievements
+      if (avg < 200) tryUnlockAchievement("geschwindigkeitsrausch");
+      if (score >= 800) tryUnlockAchievement("perfektionist");
+      if (newTimes.some(t => t < 150)) tryUnlockAchievement("blitzstart");
+
       setGameState("gameover");
     } else {
       // Next target after random delay
@@ -110,14 +148,29 @@ export default function ReaktionPage() {
       <ParticleBackground />
 
       <div className="z-10 w-full max-w-sm">
+        {achievementPopup && (
+          <AchievementPopup
+            {...achievementPopup}
+            onDone={() => setAchievementPopup(null)}
+          />
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-3">
-          <button
-            onClick={() => router.push("/countdown")}
-            className="text-white/50 hover:text-white text-sm"
-          >
-            ← Zurück
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/countdown")}
+              className="text-white/50 hover:text-white text-sm"
+            >
+              ← Zurück
+            </button>
+            <button
+              onClick={() => { const next = !muted; setMutedState(next); setMuted(next); }}
+              className="text-white/40 hover:text-white text-sm"
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+          </div>
           <div className="font-bangers text-lg text-[#FFD700] tracking-wider">
             {round}/{ROUNDS}
           </div>

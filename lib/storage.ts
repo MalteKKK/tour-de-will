@@ -9,7 +9,11 @@ const KEYS = {
   terminVotes: "tdw_terminVotes",
   gameCompleted: "tdw_gameCompleted",
   gameUnlocks: "tdw_gameUnlocks",
+  customTermine: "tdw_customTermine",
+  achievements: "tdw_achievements",
 } as const;
+
+export type Termin = { id: number; label: string; date: string };
 
 export function setCurrentPlayer(name: PlayerName) {
   localStorage.setItem(KEYS.currentPlayer, name);
@@ -102,4 +106,60 @@ export function setGameUnlock(gameId: string, unlocked: boolean) {
 export function isGameUnlocked(gameId: string): boolean {
   if (gameId === "bike-runner") return true;
   return getGameUnlocks()[gameId] === true;
+}
+
+// Custom Termine (admin-managed, overrides CONFIG.termine)
+export function getCustomTermine(): Termin[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(KEYS.customTermine);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function setCustomTermine(termine: Termin[]) {
+  localStorage.setItem(KEYS.customTermine, JSON.stringify(termine));
+}
+
+export function clearCustomTermine() {
+  localStorage.removeItem(KEYS.customTermine);
+}
+
+// Achievements: { "sternsammler": { unlockedAt: "2026-..." }, ... }
+export function getAchievements(): Record<string, { unlockedAt: string }> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(KEYS.achievements) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+export function unlockAchievement(id: string): boolean {
+  const current = getAchievements();
+  if (current[id]) return false;
+  current[id] = { unlockedAt: new Date().toISOString() };
+  localStorage.setItem(KEYS.achievements, JSON.stringify(current));
+  return true;
+}
+
+export function hasAchievement(id: string): boolean {
+  return !!getAchievements()[id];
+}
+
+// Notification tracking (per player)
+export function getLastSeenUnlocks(player: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(`tdw_lastSeenUnlocks_${player}`) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function setLastSeenUnlocks(player: string, gameIds: string[]) {
+  localStorage.setItem(`tdw_lastSeenUnlocks_${player}`, JSON.stringify(gameIds));
 }

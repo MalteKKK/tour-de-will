@@ -2,8 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentPlayer, getHighscores, setHighscore, setGameCompleted } from "@/lib/storage";
-import { CONFIG } from "@/lib/config";
+import { getCurrentPlayer, getHighscores, setHighscore, setGameCompleted, unlockAchievement } from "@/lib/storage";
+import { CONFIG, ACHIEVEMENTS } from "@/lib/config";
+import { playSound, vibrate, isMuted, setMuted } from "@/lib/sounds";
+import AchievementPopup from "@/components/AchievementPopup";
 import ParticleBackground from "@/components/ParticleBackground";
 import WillAvatar from "@/components/avatars/WillAvatar";
 import MalteAvatar from "@/components/avatars/MalteAvatar";
@@ -85,6 +87,8 @@ export default function BikeRunnerPage() {
   const dodgeStreakRef = useRef(0);
   const lastMilestoneRef = useRef(0);
   const prevHighscoreRef = useRef(0);
+  const starsCollectedRef = useRef(0);
+  const maxComboRef = useRef(0);
 
   const [player, setPlayer] = useState<string | null>(null);
   const [gameState, setGameState] = useState<"ready" | "playing" | "hint" | "gameover">("ready");
@@ -100,6 +104,8 @@ export default function BikeRunnerPage() {
   const [isNewHighscore, setIsNewHighscore] = useState(false);
   const [milestone, setMilestone] = useState<string | null>(null);
   const [screenShake, setScreenShake] = useState(false);
+  const [muted, setMutedState] = useState(false);
+  const [achievementPopup, setAchievementPopup] = useState<{ title: string; emoji: string; description: string } | null>(null);
 
   useEffect(() => {
     const p = getCurrentPlayer();
@@ -111,7 +117,26 @@ export default function BikeRunnerPage() {
     const hs = getHighscores();
     setHighscores(hs);
     prevHighscoreRef.current = hs[p] || 0;
+    setMutedState(isMuted());
   }, [router]);
+
+  function tryUnlockAchievement(id: string) {
+    const isNew = unlockAchievement(id);
+    if (isNew) {
+      const def = ACHIEVEMENTS.find(a => a.id === id);
+      if (def) {
+        playSound("achievement");
+        setAchievementPopup({ title: def.title, emoji: def.emoji, description: def.description });
+      }
+      if (player) {
+        fetch("/api/achievements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ player, achievementId: id }),
+        }).catch(() => {});
+      }
+    }
+  }
 
   function addFloatingText(text: string, x: number, y: number, color: string) {
     const ft: FloatingText = { id: Date.now() + Math.random(), text, x, y, color, createdAt: Date.now() };
@@ -142,7 +167,8 @@ export default function BikeRunnerPage() {
       if (scoreRef.current >= ms && lastMilestoneRef.current < ms) {
         lastMilestoneRef.current = ms;
         showMilestone(`${ms}m! 🔥`);
-        // Bonus points at milestones
+        playSound("milestone");
+        vibrate([50, 30, 50]);
         scoreRef.current += 10;
         break;
       }
@@ -152,6 +178,8 @@ export default function BikeRunnerPage() {
     if (!hintShownRef.current && scoreRef.current >= CONFIG.bikeRunnerHintScore) {
       hintShownRef.current = true;
       gameActiveRef.current = false;
+      playSound("hintFanfare");
+      vibrate([100, 50, 100, 50, 200]);
       setGameState("hint");
       setShowFriends(true);
       setGameCompleted("bike-runner");
@@ -212,6 +240,9 @@ export default function BikeRunnerPage() {
     collectiblesRef.current = collectiblesRef.current.filter((c) => {
       if (c.lane === playerLane && Math.abs(c.y - 520) < 40) {
         scoreRef.current += 15;
+        starsCollectedRef.current += 1;
+        playSound("starCollect");
+        vibrate(30);
         const x = c.lane * laneWidth + laneWidth / 2;
         addFloatingText("+15 ⭐", x, 480, "#FFD700");
         return false;
@@ -232,7 +263,15 @@ export default function BikeRunnerPage() {
           const bonus = Math.min(5 + dodgeStreakRef.current * 2, 25);
           scoreRef.current += bonus;
           const x = playerLane * laneWidth + laneWidth / 2;
+          if (dodgeStreakRef.current >= 5) {
+            tryUnlockAchievement("kombo-koenig");
+          }
+          if (dodgeStreakRef.current > maxComboRef.current) {
+            maxComboRef.current = dodgeStreakRef.current;
+          }
           if (dodgeStreakRef.current >= 3) {
+            playSound("comboWhoosh");
+            vibrate(50);
             addFloatingText(`Combo x${dodgeStreakRef.current}! +${bonus}`, x, 470, "#ff6b6b");
           } else {
             addFloatingText(`Knapp! +${bonus}`, x, 470, "#22c55e");
@@ -253,6 +292,8 @@ export default function BikeRunnerPage() {
     for (const obs of obstaclesRef.current) {
       if (obs.lane === playerLane && Math.abs(obs.y - 520) < COLLISION_THRESHOLD) {
         gameActiveRef.current = false;
+        playSound("crash");
+        vibrate([100, 50, 100]);
         setScreenShake(true);
         setTimeout(() => setScreenShake(false), 300);
 
@@ -263,7 +304,19 @@ export default function BikeRunnerPage() {
         if (player) {
           setHighscore(player, finalScore);
           setHighscores(getHighscores());
+          // Sync to shared backend
+          fetch("/api/scores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ player, game: "bike-runner", score: finalScore }),
+          }).catch(() => {});
         }
+
+        // Check achievements
+        if (finalScore >= 500) tryUnlockAchievement("unaufhaltsam");
+        if (finalScore >= 1000) tryUnlockAchievement("marathon");
+        if (starsCollectedRef.current >= 10) tryUnlockAchievement("sternsammler");
+
         setGameState("gameover");
         return;
       }
@@ -294,6 +347,8 @@ export default function BikeRunnerPage() {
     lastTimeRef.current = 0;
     lastMilestoneRef.current = 0;
     dodgeStreakRef.current = 0;
+    starsCollectedRef.current = 0;
+    maxComboRef.current = 0;
     gameActiveRef.current = true;
     setScore(0);
     setLane(1);
@@ -361,10 +416,25 @@ export default function BikeRunnerPage() {
       <ParticleBackground />
 
       <div className="z-10 w-full max-w-sm">
+        {achievementPopup && (
+          <AchievementPopup
+            {...achievementPopup}
+            onDone={() => setAchievementPopup(null)}
+          />
+        )}
+
         <div className="flex justify-between items-center mb-3">
-          <button onClick={() => router.push("/countdown")} className="text-white/50 hover:text-white text-sm">
-            ← Zurück
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => router.push("/countdown")} className="text-white/50 hover:text-white text-sm">
+              ← Zurück
+            </button>
+            <button
+              onClick={() => { const next = !muted; setMutedState(next); setMuted(next); }}
+              className="text-white/40 hover:text-white text-sm"
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+          </div>
           <div className="flex items-center gap-3">
             {dodgeStreak >= 3 && gameState === "playing" && (
               <div className="text-xs text-[#ff6b6b] font-bold animate-pulse-slow">
