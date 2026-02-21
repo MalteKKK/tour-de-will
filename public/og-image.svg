@@ -76,5 +76,5 @@
 
   <!-- Title below -->
   <text x="600" y="560" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="62" fill="#FFD700" letter-spacing="5">TOUR DE WILL</text>
-  <text x="600" y="605" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="26" fill="#8ab4d6" opacity="0.8">Wills 30. Geburtstags-Radabenteuer</text>
+  <text x="600" y="605" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="26" fill="#8ab4d6" opacity="0.8">Wills 30. Geburtstagsabenteuer</text>
 </svg>

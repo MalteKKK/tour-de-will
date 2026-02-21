@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Tour de Will – 30. Geburtstag",
-  description: "Wills 30. Geburtstags-Radabenteuer",
+  description: "Wills 30. Geburtstagsabenteuer",
   manifest: "/manifest.json",
   icons: {
     icon: "/icon-192.png",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Tour de Will – 30. Geburtstag",
-    description: "Wills 30. Geburtstags-Radabenteuer",
+    description: "Wills 30. Geburtstagsabenteuer",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
 };
